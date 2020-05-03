@@ -3,6 +3,7 @@ import serial
 import logging
 
 # TODO: How may I actually reverse engineer protocol? May I just somehow guess all of these data? ask @gynvael.coldwind
+# If receiving "[Errno 13] could not open port...", run ./scripts/privileges.sh as sudo
 
 def new_serial():
     s = serial.Serial(
@@ -18,7 +19,6 @@ def new_serial():
 
 
 def new_logger():
-    # TODO: csv stream
     # formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     l = logging.getLogger('poor_mans_logger')
     l.setLevel(logging.DEBUG)
@@ -33,9 +33,14 @@ def new_logger():
     return l 
 
 
+def parse_line(serial_handle):
+    line = s.read_until(b'\r\n')
+    return (len(line), line)
+
+
 if __name__ == "__main__":
     logger = new_logger()
     with new_serial() as s:
         while True:
-            line = s.read_until(b'\r\n')
-            logger.debug('%d - %s', len(line), line)
+            line_len, line = parse_line(s)
+            logger.debug('%d - %s', line_len, line)
